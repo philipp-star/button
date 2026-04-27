@@ -87,33 +87,44 @@ function playPurchase() {
 const MUSIC_URL = './music.mp3';
 const LOOP_START = 2.405, LOOP_END = 68; // 0:02.405 → 1:08
 function startMusic() {
-    if (AUDIO.music) return;
+    if (AUDIO.music) return; // already running — never start a second one
     getCtx();
     const audio = new Audio(MUSIC_URL);
     audio.preload = 'auto'; audio.volume = 0.55; audio.loop = false;
-    let started = false;
+    // Aborted flag prevents the canplay/ended handlers from re-starting playback
+    // if the user toggles music off before the audio finishes loading.
+    let aborted = false;
     audio.addEventListener('canplay', () => {
-        if (started) return;
-        started = true;
+        if (aborted) return;
         try { audio.currentTime = LOOP_START; } catch {}
-        audio.play().catch(() => {});
+        const p = audio.play();
+        if (p && p.catch) p.catch(() => {});
     });
     const loopChecker = setInterval(() => {
+        if (aborted) return;
         if (audio.currentTime >= LOOP_END) {
             try { audio.currentTime = LOOP_START; } catch {}
         }
     }, 50);
     audio.addEventListener('ended', () => {
+        if (aborted) return;
         try { audio.currentTime = LOOP_START; } catch {}
         audio.play().catch(() => {});
     });
     AUDIO.music = audio;
     AUDIO.musicLoopChecker = loopChecker;
+    AUDIO.musicAbort = () => { aborted = true; };
 }
 function stopMusic() {
+    if (AUDIO.musicAbort) { AUDIO.musicAbort(); AUDIO.musicAbort = null; }
     if (AUDIO.musicLoopChecker) { clearInterval(AUDIO.musicLoopChecker); AUDIO.musicLoopChecker = null; }
     if (AUDIO.music) {
-        try { AUDIO.music.pause(); AUDIO.music.currentTime = 0; } catch {}
+        try {
+            AUDIO.music.pause();
+            // Force full unload so a pending play() promise can't bring it back
+            AUDIO.music.removeAttribute('src');
+            AUDIO.music.load();
+        } catch {}
         AUDIO.music = null;
     }
 }
@@ -191,8 +202,8 @@ const WORKER_EMOJIS = {
     curio:    '🪐',
 };
 const WORKER_CAPS = IS_EMBEDDED
-    ? {intern: 12, designer: 8,  engineer: 5,  ai: 4, quantum: 3, curio: 2}
-    : {intern: 25, designer: 15, engineer: 10, ai: 7, quantum: 5, curio: 4};
+    ? {intern: 8,  designer: 6,  engineer: 4, ai: 3, quantum: 2, curio: 2}
+    : {intern: 18, designer: 12, engineer: 8, ai: 5, quantum: 4, curio: 3};
 
 const STAGES_INTRO = [
     {warn:'DO NOT PRESS', sub:"Seriously, don't."},
@@ -442,7 +453,13 @@ function App() {
             }
             while (arr.length > target) {
                 const el = arr.pop();
-                if (el && el.parentNode) el.parentNode.removeChild(el);
+                if (el) {
+                    // Explicitly cancel infinite animations so they don't leak
+                    if (el.getAnimations) {
+                        try { el.getAnimations().forEach((a) => a.cancel()); } catch {}
+                    }
+                    if (el.parentNode) el.parentNode.removeChild(el);
+                }
             }
         }
     }, [owned]);
@@ -471,15 +488,23 @@ function App() {
         else setStage(STAGES_BANK[(Math.random() * STAGES_BANK.length) | 0]);
     }, [presses]);
 
+    // Auto-tick at 5Hz (was 10Hz) — half the React renders, same total income.
+    // Pauses while the tab is hidden to free up CPU.
+    const [tabVisible, setTabVisible] = useState(typeof document !== 'undefined' ? !document.hidden : true);
     useEffect(() => {
-        if (stats.perSecond <= 0) return;
+        const onVis = () => setTabVisible(!document.hidden);
+        document.addEventListener('visibilitychange', onVis);
+        return () => document.removeEventListener('visibilitychange', onVis);
+    }, []);
+    useEffect(() => {
+        if (stats.perSecond <= 0 || !tabVisible) return;
         const id = setInterval(() => {
-            const inc = stats.perSecond / 10;
+            const inc = stats.perSecond / 5;
             setCount((c) => c + inc);
             setTotalEarned((t) => t + inc);
-        }, 100);
+        }, 200);
         return () => clearInterval(id);
-    }, [stats.perSecond]);
+    }, [stats.perSecond, tabVisible]);
 
     useEffect(() => {
         if (totalEarned <= 0) return;
