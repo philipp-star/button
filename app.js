@@ -85,7 +85,7 @@ function playPurchase() {
 }
 
 const MUSIC_URL = './music.mp3';
-const LOOP_START = 2.405, LOOP_END = 72;
+const LOOP_START = 2.405, LOOP_END = 68; // 0:02.405 → 1:08
 function startMusic() {
     if (AUDIO.music) return;
     getCtx();
