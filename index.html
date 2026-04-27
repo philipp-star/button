@@ -54,13 +54,13 @@
     <!-- Custom keyframes + tweaks -->
     <link rel="stylesheet" href="./styles.css" />
 
-    <!-- React 19 + Babel for in-browser JSX (Babel standalone supports type=text/babel scripts) -->
-    <script crossorigin src="https://unpkg.com/react@19/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@19/umd/react-dom.production.min.js"></script>
+    <!-- React 18 (UMD) + Babel standalone for in-browser JSX. React 19 dropped UMD; 18 is API-compatible for our use. -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
     <div id="root"></div>
-    <script type="text/babel" data-type="module" data-presets="env,react" src="./app.js"></script>
+    <script type="text/babel" data-presets="react" src="./app.js"></script>
 </body>
 </html>
