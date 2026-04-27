@@ -17,7 +17,7 @@ const RUNAWAY_ENABLED   = !IS_EMBEDDED;
 // =====================================================================
 // AUDIO
 // =====================================================================
-const AUDIO = {ctx: null, masterGain: null, music: null, musicLoopChecker: null};
+const AUDIO = {ctx: null, masterGain: null, music: null};
 const VOICE_CAPS = {click: 3, airhorn: 1, purchase: 2};
 const liveVoices = {click: 0, airhorn: 0, purchase: 0};
 
@@ -85,39 +85,28 @@ function playPurchase() {
 }
 
 const MUSIC_URL = './music.mp3';
-const LOOP_START = 2.405, LOOP_END = 68; // 0:02.405 → 1:08
 function startMusic() {
     if (AUDIO.music) return; // already running — never start a second one
     getCtx();
     const audio = new Audio(MUSIC_URL);
-    audio.preload = 'auto'; audio.volume = 0.55; audio.loop = false;
-    // Aborted flag prevents the canplay/ended handlers from re-starting playback
-    // if the user toggles music off before the audio finishes loading.
+    audio.preload = 'auto';
+    audio.volume = 0.55;
+    audio.loop = true; // file is pre-trimmed; let the element loop natively
+    // `aborted` — lets stopMusic short-circuit the canplay handler if the user
+    //   toggles music off before the initial play() resolves.
     let aborted = false;
+    let started = false;
     audio.addEventListener('canplay', () => {
-        if (aborted) return;
-        try { audio.currentTime = LOOP_START; } catch {}
+        if (aborted || started) return;
+        started = true;
         const p = audio.play();
         if (p && p.catch) p.catch(() => {});
     });
-    const loopChecker = setInterval(() => {
-        if (aborted) return;
-        if (audio.currentTime >= LOOP_END) {
-            try { audio.currentTime = LOOP_START; } catch {}
-        }
-    }, 50);
-    audio.addEventListener('ended', () => {
-        if (aborted) return;
-        try { audio.currentTime = LOOP_START; } catch {}
-        audio.play().catch(() => {});
-    });
     AUDIO.music = audio;
-    AUDIO.musicLoopChecker = loopChecker;
     AUDIO.musicAbort = () => { aborted = true; };
 }
 function stopMusic() {
     if (AUDIO.musicAbort) { AUDIO.musicAbort(); AUDIO.musicAbort = null; }
-    if (AUDIO.musicLoopChecker) { clearInterval(AUDIO.musicLoopChecker); AUDIO.musicLoopChecker = null; }
     if (AUDIO.music) {
         try {
             AUDIO.music.pause();
