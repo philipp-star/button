@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Curio Digital · Press The Button</title>
+    <meta name="description" content="A Curio-branded press-the-button mini-game." />
+    <meta name="theme-color" content="#0D0533" />
+
+    <!-- Tailwind via play CDN with the Curio palette -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        display: ['Inter Display', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        purple: {
+                            purple: 'rgb(124, 55, 239)',
+                            purpleDark1: 'rgb(98, 49, 174)',
+                            purpleLight1: 'rgb(191, 174, 252)',
+                            purpleLight2: 'rgb(224, 218, 253)',
+                            purpleLight3: 'rgb(252, 243, 255)',
+                        },
+                        pink: {
+                            pink: 'rgb(221, 4, 168)',
+                        },
+                        gray: {
+                            gray100: 'rgb(229, 233, 240)',
+                            gray400: 'rgb(151, 154, 160)',
+                            gray500: 'rgb(97, 102, 112)',
+                            gray700: 'rgb(49, 53, 62)',
+                            gray800: 'rgb(29, 31, 37)',
+                        },
+                        green: {
+                            greenLight1: 'rgb(154, 224, 149)',
+                        },
+                        orange: {
+                            orangeDark1: 'rgb(170, 45, 0)',
+                            orangeLight3: 'rgb(255, 236, 227)',
+                        },
+                        yellow: {
+                            yellowLight1: 'rgb(255, 214, 107)',
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+
+    <!-- Custom keyframes + tweaks -->
+    <link rel="stylesheet" href="./styles.css" />
+
+    <!-- React 19 + Babel for in-browser JSX (Babel standalone supports type=text/babel scripts) -->
+    <script crossorigin src="https://unpkg.com/react@19/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@19/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel" data-type="module" data-presets="env,react" src="./app.js"></script>
+</body>
+</html>
